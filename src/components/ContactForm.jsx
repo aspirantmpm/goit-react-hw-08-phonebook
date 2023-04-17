@@ -1,66 +1,158 @@
-import React, { useState } from 'react';
-import { Formik } from 'formik';
-import { MainForm, Button, Label, Input } from './GlobalStyle';
-import { useSelector, useDispatch } from 'react-redux';
-import { addContact } from '../redux/operations';
-import { getContacts } from '../redux/selectors';
-import { nanoid } from 'nanoid';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import toast from 'react-hot-toast';
+import { addContact } from 'redux/operations';
+import { selectContacts } from 'redux/selectors';
+import { validateName, validateNumber } from 'components/validations';
+import TextField from '@mui/material/TextField';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { Fab } from '@mui/material';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 
 export const ContactForm = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
-
-  const onChangeName = e => setName(e.currentTarget.value);
-  const onChangeNumber = e => setNumber(e.currentTarget.value);
+  const [nameError, setNameError] = useState(false);
+  const [numberError, setNumberError] = useState(false);
 
   const dispatch = useDispatch();
-  const contacts = useSelector(getContacts);
+  const contacts = useSelector(selectContacts);
 
-  const handleSubmit = event => {
-    const newContact = { id: nanoid(), name, number };
+  const checkContact = value => {
+    const isInContacts = contacts.some(
+      ({ name }) => name.toLowerCase() === value.toLowerCase()
+    );
+    return isInContacts;
+  };
 
-    if (contacts.some(contact => contact.name === name)) {
-      alert(`${name} is already in contacts`);
+  useEffect(() => {
+    if (name === '') {
       return;
     }
-    dispatch(addContact(newContact));
+    if (!validateName(name.trim())) {
+      setNameError(true);
+    } else {
+      setNameError(false);
+    }
+  }, [name, nameError]);
+
+  useEffect(() => {
+    if (number === '') {
+      return;
+    }
+    if (!validateNumber(number.trim())) {
+      setNumberError(true);
+    } else {
+      setNumberError(false);
+    }
+  }, [number, numberError]);
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    if (checkContact(name)) {
+      return toast.error(`${name} is already in contacts.`);
+    }
+    if (
+      nameError ||
+      numberError ||
+      name.trim() === '' ||
+      number.trim() === ''
+    ) {
+      setNameError(true);
+      setNumberError(true);
+      return;
+    }
+    dispatch(addContact({ name, number }));
+    reset();
+  };
+
+  const handleChange = e => {
+    const { name, value } = e.currentTarget;
+    switch (name) {
+      case 'name':
+        setName(value);
+        break;
+      case 'number':
+        setNumber(value);
+        break;
+      default:
+        return;
+    }
+  };
+
+  const reset = () => {
     setName('');
     setNumber('');
   };
 
   return (
-    <Formik initialValues={{ name: '', number: '' }} onSubmit={handleSubmit}>
-      <MainForm autoComplete="off">
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <div>
-            <Input
-              onChange={onChangeName}
+    <Box
+      sx={{
+        marginTop: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
+      <Typography component="h1" variant="h4">
+        New contact
+      </Typography>
+      <Box noValidate component="form" onSubmit={handleSubmit} mt={2}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <TextField
+              sx={{ maxWidth: '462px' }}
+              fullWidth
+              id="name"
+              label="Name"
+              name="name"
+              autoComplete="off"
               value={name}
               type="text"
-              name="name"
-              pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-              title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-              required
+              onChange={handleChange}
+              error={nameError}
+              {...(nameError && {
+                helperText:
+                  'Name may contain only letters, apostrophe, dash and spaces. Max. length 15',
+              })}
             />
-          </div>
-        </div>
-        <div>
-          <Label htmlFor="number">Number</Label>
-          <div>
-            <Input
-              onChange={onChangeNumber}
+          </Grid>
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+            <TextField
+              sx={{ maxWidth: '462px' }}
+              fullWidth
+              id="number"
+              label="Number"
+              name="number"
+              autoComplete="off"
               value={number}
               type="tel"
-              name="number"
-              pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-              title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-              required
+              onChange={handleChange}
+              error={numberError}
+              {...(numberError && {
+                helperText:
+                  'Number must be digits and can contain spaces, dashes, parentheses and can start with +. Max length 20',
+              })}
             />
-          </div>
-        </div>
-        <Button type="submit">Add contact</Button>
-      </MainForm>
-    </Formik>
+          </Grid>
+        </Grid>
+        <Grid
+          item
+          sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}
+          xs={12}
+        >
+          <Fab
+            sx={{ width: 60, height: 60 }}
+            type="submit"
+            color="primary"
+            aria-label="add"
+          >
+            <PersonAddIcon fontSize="large" />
+          </Fab>
+        </Grid>
+      </Box>
+    </Box>
   );
 };

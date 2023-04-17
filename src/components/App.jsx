@@ -1,36 +1,67 @@
-import React, { useEffect } from 'react';
-import { ContactForm } from './ContactForm';
-import { ContactList } from './ContactList';
-import { ContactFind } from './ContactFind';
-import { Section, Title } from './GlobalStyle';
-import { useSelector, useDispatch } from 'react-redux';
-import { getContacts, getIsLoading, getError } from 'redux/selectors';
-import { fetchContacts } from 'redux/operations';
+import { Routes, Route } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { lazy } from 'react';
+import { selectIsRefreshing } from 'redux/selectors';
+import { refresh } from 'redux/operations';
+import { useEffect } from 'react';
+import { Layout } from './Layout';
+import { RestrictedRoute } from './RestrictedRoute';
+import { PrivateRoute } from './privateRouter';
+import { Toaster } from 'react-hot-toast';
+const Home = lazy(() => import('pages/home'));
+const Contacts = lazy(() => import('pages/contacts'));
+const Register = lazy(() => import('pages/register'));
+const Login = lazy(() => import('pages/login'));
+const NotFound = lazy(() => import('pages/notFound'));
 
 export const App = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(getContacts);
-  const isLoading = useSelector(getIsLoading);
-  const error = useSelector(getError);
-
+  const isRefreshing = useSelector(selectIsRefreshing);
   useEffect(() => {
-    dispatch(fetchContacts());
+    dispatch(refresh());
   }, [dispatch]);
-
   return (
-    <Section>
-      <Title>Phonebook</Title>
-      <ContactForm />
+    !isRefreshing && (
       <>
-        {isLoading && !error && <b>Request in progress...</b>}
-        {contacts?.length > 0 && (
-          <>
-            <Title>Contacts</Title>
-            <ContactFind />
-            <ContactList />
-          </>
-        )}
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route
+              path="register"
+              element={
+                <RestrictedRoute
+                  redirectTo="/contacts"
+                  component={<Register />}
+                />
+              }
+            />
+            <Route
+              path="login"
+              element={
+                <RestrictedRoute redirectTo="/contacts" component={<Login />} />
+              }
+            />
+            <Route
+              path="contacts"
+              element={
+                <PrivateRoute redirectTo="/login" component={<Contacts />} />
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            success: {
+              duration: 2000,
+            },
+            error: {
+              duration: 2000,
+            },
+          }}
+        />
       </>
-    </Section>
+    )
   );
 };
