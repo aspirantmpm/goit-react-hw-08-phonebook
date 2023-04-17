@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { register } from 'redux/operations';
-import { validateEmail, validatePassword } from '../components/validations';
+import { validateEmail, validatePassword } from 'components/validations';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';

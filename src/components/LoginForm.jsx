@@ -1,4 +1,4 @@
-import { logIn } from 'redux/operations';
+import { logIn } from '../redux/operations';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import Button from '@mui/material/Button';
