@@ -6,13 +6,13 @@ import { refresh } from 'redux/operations';
 import { useEffect } from 'react';
 import { Layout } from './Layout';
 import { RestrictedRoute } from './RestrictedRoute';
-import { PrivateRoute } from './privateRouter';
+import { PrivateRoute } from './PrivateRouter';
 import { Toaster } from 'react-hot-toast';
-const Home = lazy(() => import('pages/home'));
-const Contacts = lazy(() => import('pages/contacts'));
-const Register = lazy(() => import('pages/register'));
-const Login = lazy(() => import('pages/login'));
-const NotFound = lazy(() => import('pages/notFound'));
+const Home = lazy(() => import('../pages/home'));
+const Contacts = lazy(() => import('../pages/contacts'));
+const Register = lazy(() => import('../pages/register'));
+const Login = lazy(() => import('../pages/login'));
+const NotFound = lazy(() => import('../pages/notFound'));
 
 export const App = () => {
   const dispatch = useDispatch();
